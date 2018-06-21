@@ -1,0 +1,5 @@
+SBODIR ?= ${CURDIR}
+
+SUBDIR += @category@
+
+include ${SBODIR}/mk/sbo.subdir.mk

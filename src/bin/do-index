@@ -1,0 +1,78 @@
+#!/usr/bin/perl
+#
+# Usage: do-index /path/to/slackbuilds/repo
+
+use strict;
+use warnings;
+
+use feature qw(say);
+use Cwd qw(getcwd);
+
+sub fetch_subdir {
+	my $ret = shift;
+	my $path = shift;
+	open my $fh, "$path/Makefile" or die "$!";
+	while (my $line = <$fh>) {
+		chomp $line;
+		if ((substr $line, 0, 10) eq 'SUBDIR += ') {
+			push @{ $ret }, substr $line, 10;
+		}
+	}
+	close $fh;
+}
+
+my %SUBDIR;
+my $cwd = getcwd;
+
+chdir $ARGV[0];
+
+my @categories;
+fetch_subdir \@categories, '.';
+foreach my $cat (@categories) {
+	my @subdirs;
+	fetch_subdir \@subdirs, $cat;
+	foreach my $subdir (@subdirs) {
+		my (
+			$pkgname,
+			$pkgver,
+			$pkgpath,
+			$comment,
+			$descr,
+			$maintainer,
+			$dep,
+		);
+
+		my $err = 0;
+		foreach my $test (<"$cat/$subdir/$subdir.info" "$cat/$subdir/slack-desc">) {
+			unless (-f $test) {
+				$err = 1;
+				say STDERR "$0: $test: $!";
+			}
+		}
+		if ($err) {
+			exit 1;
+		}
+
+		($pkgname, $pkgver, $maintainer, $dep) = split /\|/, `. $cat/$subdir/$subdir.info; printf '%s' "\${PRGNAM}|\${VERSION}|\${MAINTAINER} <\${EMAIL}>|\${REQUIRES}"`;
+		$pkgpath = "$cat/$subdir";
+
+		$dep = "" if ($dep eq '%README%');
+
+		# $comment
+		open (my $fh, "$cat/$subdir/slack-desc");
+		while (my $line = <$fh>) {
+			chomp $line;
+			if ((substr $line, 0, (length "$pkgname:")) eq "$pkgname:") {
+				($comment = $line) =~ s/[^(]*\((.*)\).*/$1/;
+				last;
+			}
+		}
+		close $fh;
+
+		$descr = "$cat/$subdir/slack-desc";
+
+		say "${pkgname}|${pkgver}|${pkgpath}|${comment}|${descr}|${maintainer}|${dep}";
+	}
+}
+
+chdir $cwd;

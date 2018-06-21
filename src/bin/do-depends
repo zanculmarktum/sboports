@@ -1,0 +1,81 @@
+#!/usr/bin/perl
+#
+# Usage: SBODIR=/path/to/slackbuilds/repo do-depends [-p]
+
+use strict;
+use warnings;
+
+use feature qw(say);
+use Cwd qw(getcwd);
+use File::Basename qw(basename);
+
+my $sbodir = $ENV{'SBODIR'} or exit 1;
+my $opt_p = (1 || 0) if shift;
+my $cwd = getcwd;
+my $basename = basename $cwd;
+my $upperdir; $upperdir .= '../' for (2..(scalar (split "/", (substr $cwd, (length $sbodir)))));
+
+sub fetch_deps {
+	my $ret = shift;
+	my $key = shift;
+	open my $fh, "$sbodir/INDEX" or die "$!";
+	LINE: while (my $line = <$fh>) {
+		chomp $line;
+		my ($pkg, $deps) = (split /\|/, $line)[0, 6];
+		if ($pkg eq $key) {
+			@{ $ret } = split " ", $deps if ($deps);
+			last LINE;
+		}
+	}
+	close $fh;
+}
+
+sub fetch_path {
+	my $ret = shift;
+	my $key = shift;
+	open my $fh, "$sbodir/INDEX" or die "$!";
+	LINE: while (my $line = <$fh>) {
+		chomp $line;
+		my ($pkg, $path) = (split /\|/, $line)[0, 2];
+		if ($pkg eq $key) {
+			push @{ $ret }, $upperdir . $path;
+			last LINE;
+		}
+	}
+	close $fh;
+}
+
+my @dups;
+sub is_dups {
+	my $var = shift;
+	foreach my $dup (@dups) {
+		return 1 if $var eq $dup;
+	}
+	push @dups, $var;
+	return 0;
+}
+
+sub recurse_deps {
+	my $ret = shift;
+	my $key = shift;
+	my @deps;
+	fetch_deps \@deps, $key;
+	DEPS: foreach my $d (@deps) {
+		recurse_deps(\@{ $ret }, $d);
+		next DEPS if is_dups $d;
+		push @{ $ret }, $d;
+	}
+}
+
+my @deps;
+recurse_deps \@deps, $basename;
+if ($opt_p) {
+	my @paths;
+	foreach my $d (@deps) {
+		fetch_path \@paths, $d;
+	}
+	say join " ", @paths;
+}
+else {
+	say join " ", @deps;
+}
