@@ -210,6 +210,33 @@ ifneq (${_SUBMAKE}, yes)
 	@${_MAKE} fetch
 endif
 
+checksum:
+	@${_import_vars}; \
+	${_import_urls}; \
+	md5="$$MD5SUM"; \
+	if [ "$$(uname -m)" = "x86_64" -a -n "$$MD5SUM_x86_64" ]; then \
+		md5="$$MD5SUM_x86_64"; \
+	fi; \
+	echo "===>  Checking files for $$PRGNAM-$$VERSION"; \
+	if cd ${FULLDISTDIR} 2>/dev/null; then \
+		i=0; \
+		for u in $$url; do \
+			j=0; \
+			for m in $$md5; do \
+				[ "$$i" -eq "$$j" ] && break; \
+				j=$$(($$j+1)); \
+			done; \
+			echo "$$m $${u##*/}" | md5sum -c; \
+			i=$$(($$i+1)); \
+		done; \
+	fi
+
+checksum-depends:
+ifneq (${_SUBMAKE}, yes)
+	@target=checksum; ${_recurse_target}
+	@${_MAKE} checksum
+endif
+
 _internal-build _internal-all:
 	@for f in ${FULLDISTDIR}/* ${FULLDISTDIR}/.*; do \
 		if [ ! -e "$$f" ]; then \
@@ -324,5 +351,6 @@ include ${SBODIR}/mk/main.mk
 
 .PHONY: all build rebuild install install-depends \
 	uninstall deinstall clean clean-depends distclean \
-	distclean-depends fetch fetch-depends print-depends \
-	_internal-all _internal-build _internal-clean
+	distclean-depends fetch fetch-depends checksum \
+	checksum-depends print-depends _internal-all \
+	_internal-build _internal-clean
