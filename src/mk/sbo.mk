@@ -116,7 +116,7 @@ else
 	${_is_built} || ${_MAKE} _internal-$@
 endif
 
-install-depends:
+install-depends: ${SBODIR}/INDEX
 ifneq (${_SUBMAKE}, yes)
 	@target=install; ${_recurse_target}
 endif
@@ -204,7 +204,7 @@ fetch:
 		done; \
 	done
 
-fetch-depends:
+fetch-depends: ${SBODIR}/INDEX
 ifneq (${_SUBMAKE}, yes)
 	@target=fetch; ${_recurse_target}
 	@${_MAKE} fetch
@@ -231,7 +231,7 @@ checksum:
 		done; \
 	fi
 
-checksum-depends:
+checksum-depends: ${SBODIR}/INDEX
 ifneq (${_SUBMAKE}, yes)
 	@target=checksum; ${_recurse_target}
 	@${_MAKE} checksum
@@ -268,7 +268,7 @@ _internal-build _internal-all:
 	PKGTYPE="txz" \
 	$$FAKEROOT ./$$PRGNAM.SlackBuild
 
-_internal-clean:
+_internal-clean: ${SBODIR}/INDEX
 ifneq (${_SUBMAKE}, yes)
 ifeq ($(filter depends,${clean}), depends)
 	@target=clean; ${_recurse_target}
