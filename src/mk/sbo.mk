@@ -309,7 +309,7 @@ ifeq ($(filter dist,${_clean}), dist)
 				fi; \
 			done; \
 			if ! $$found; then \
-				echo 'rm -f "$$f"'; \
+				echo "rm -f \"${FULLDISTDIR}/$$f\""; \
 				rm -f "$$f"; \
 			fi; \
 		done; \
@@ -333,7 +333,7 @@ ifeq ($(filter package,${_clean}), package)
 				fi; \
 			done; \
 			if ! $$found; then \
-				echo 'rm -f "$$f"'; \
+				echo "rm -f ${PACKAGE_REPOSITORY}/$$f"; \
 				rm -f "$$f"; \
 			fi; \
 		done; \
