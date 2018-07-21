@@ -302,7 +302,10 @@ ifeq ($(filter dist,${_clean}), dist)
 					break; \
 				fi; \
 			done; \
-			$$found || rm -rf "$$f"; \
+			if ! $$found; then \
+				echo 'rm -f "$$f"'; \
+				rm -f "$$f"; \
+			fi; \
 		done; \
 	fi
 endif
@@ -323,7 +326,10 @@ ifeq ($(filter package,${_clean}), package)
 					break; \
 				fi; \
 			done; \
-			$$found || rm -f "$$f"; \
+			if ! $$found; then \
+				echo 'rm -f "$$f"'; \
+				rm -f "$$f"; \
+			fi; \
 		done; \
 	fi
 endif
