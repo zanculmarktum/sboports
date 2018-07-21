@@ -182,6 +182,12 @@ uninstall deinstall:
 		echo "Package $$PRGNAM-$$VERSION is already deinstalled"; \
 	fi
 
+deinstall-depends: ${SBODIR}/INDEX
+ifneq (${_SUBMAKE}, yes)
+	@target=deinstall; ${_recurse_target}
+	@${_MAKE} deinstall
+endif
+
 fetch:
 	@dir=${FULLDISTDIR}; ${_test_dir}
 	@${_import_vars}; \
@@ -356,7 +362,7 @@ print-depends: ${SBODIR}/INDEX
 include ${SBODIR}/mk/main.mk
 
 .PHONY: all build rebuild install install-depends \
-	uninstall deinstall clean clean-depends distclean \
-	distclean-depends fetch fetch-depends checksum \
-	checksum-depends print-depends _internal-all \
-	_internal-build _internal-clean
+	uninstall deinstall deinstall-depends clean \
+	clean-depends distclean distclean-depends fetch \
+	fetch-depends checksum checksum-depends print-depends \
+	_internal-all _internal-build _internal-clean
