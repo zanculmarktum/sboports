@@ -197,6 +197,11 @@ fetch:
 		f="${FULLDISTDIR}/$${u##*/}"; \
 		[ -f "$$f" ] && continue; \
 		echo ">> $$u"; \
+		header=$$(curl -Is "$$u" | head -1); \
+		if [ "$${header#*404}" != "$$header" ]; then \
+			echo "Fatal: The URL is dead"; \
+			continue; \
+		fi; \
 		while :; do \
 			curl -L -R -C - -Y 1 -y 10 -k -g -o "$$f".part "$$u"; \
 			ret="$$?"; \
